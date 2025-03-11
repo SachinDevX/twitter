@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:twitter/pages/home_page.dart';
+import 'package:twitter/pages/login_page.dart';
 import 'package:twitter/themes/dark_mode.dart';
 import 'package:twitter/themes/light_mode.dart';
 import 'package:twitter/themes/theme_provider.dart';
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomePage(),
+      home: LoginPage(),
       theme: Provider.of<ThemeProvider>(context).themeData,
     );
   }
