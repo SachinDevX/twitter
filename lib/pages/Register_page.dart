@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:twitter/components/loading_circle.dart';
+import 'package:twitter/services/auth/auth_service.dart';
 
 import '../components/my_button.dart';
 import '../components/my_text_field.dart';
@@ -13,11 +15,54 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+
+  final _auth = AuthService();
+
   final TextEditingController emailController = TextEditingController();
   final TextEditingController pwController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController confirmPWController = TextEditingController();
+  //register button tapped
 
+  void register() async{
+    //password matches -> create user
+    if (pwController.text == confirmPWController.text){
+      //show loading circle
+      showLoadingCircle(context);
+
+      //attempt to register new user
+      try{
+        //trying to register
+        await _auth.registerEmailPassword(emailController.text, pwController.text);
+
+        if(mounted) hideLoadingCircle(context);
+      }
+      catch(e){
+        if(mounted) hideLoadingCircle(context);
+
+        //let user know of the error
+        if(mounted){
+          showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text(e.toString()
+                ),
+              ),
+          );
+        }
+      }
+    }
+    //password does not match
+    else{
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Password does not match "
+          ),
+        ),
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -90,7 +135,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                 const SizedBox(height: 25),
 
-                MyButton(onTap: () {},
+                MyButton(onTap: register,
                     text: "Register"),
 
                 const SizedBox(height: 50),

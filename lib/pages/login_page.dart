@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twitter/components/loading_circle.dart';
 import 'package:twitter/components/my_button.dart';
 import 'package:twitter/components/my_text_field.dart';
 import 'package:twitter/services/auth/auth_service.dart';
@@ -17,13 +18,27 @@ class _LoginPageState extends State<LoginPage> {
   final _auth = AuthService();
   //login method
   void Login() async {
-    //attempt login
+    showLoadingCircle(context);
+
     try{
+      //attempt login
       await _auth.loginEmailPAssword(emailController.text, pwController.text);
+      //finishing loading
+      if (mounted) hideLoadingCircle(context);
     }
     //catch any error
     catch (e){
-      print(e.toString());
+      //finishing loading
+      if (mounted) hideLoadingCircle(context);
+      if(mounted){
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(e.toString()
+            ),
+          ),
+        );
+      }
     }
   }
 
