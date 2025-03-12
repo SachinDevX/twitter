@@ -1,15 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:twitter/components/my_button.dart';
 import 'package:twitter/components/my_text_field.dart';
+import 'package:twitter/services/auth/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final void Function() ? onTap;
+  const LoginPage({super.key,
+  required this.onTap});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
+  //access auth service
+  final _auth = AuthService();
+  //login method
+  void Login() async {
+    //attempt login
+    try{
+      await _auth.loginEmailPAssword(emailController.text, pwController.text);
+    }
+    //catch any error
+    catch (e){
+      print(e.toString());
+    }
+  }
+
+
+  //text controller
   final TextEditingController emailController = TextEditingController();
   final TextEditingController pwController = TextEditingController();
   @override
@@ -63,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 const SizedBox(height: 25),
                 
-                MyButton(onTap: () {},
+                MyButton(onTap: Login,
                     text: "Login"),
 
                 const SizedBox(height: 50),
@@ -80,7 +99,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(width: 5),
                     //user can tap to go to register page
                     GestureDetector(
-                      onTap: (){},
+                      onTap: widget.onTap,
                       child: Text(
                         "Register Now",
                         style: TextStyle(
