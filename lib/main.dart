@@ -20,10 +20,17 @@ void main() async {
   
   //run app
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeProvider(),
+    MultiProvider(
+        providers: [
+          //theme provider
+          ChangeNotifierProvider(create: (context) => ThemeProvider()),
+          //database provider
+          ChangeNotifierProvider(
+            create: (context) => ThemeProvider(),
+          )
+        ],
       child: const MyApp(),
-    )
+    ),
   );
 }
 
