@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:twitter/components/loading_circle.dart';
 import 'package:twitter/services/auth/auth_service.dart';
+import 'package:twitter/services/database/database.dart';
 
 import '../components/my_button.dart';
 import '../components/my_text_field.dart';
@@ -15,8 +16,9 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-
+  //access auth and database service
   final _auth = AuthService();
+  final _db = DataBaseService();
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController pwController = TextEditingController();
@@ -34,8 +36,11 @@ class _RegisterPageState extends State<RegisterPage> {
       try{
         //trying to register
         await _auth.registerEmailPassword(emailController.text, pwController.text);
-
+        //finishing loading...
         if(mounted) hideLoadingCircle(context);
+
+        //once register create and save user profile
+        await _db.saveUserInfoFirebase(name: nameController.text, email: emailController.text);
       }
       catch(e){
         if(mounted) hideLoadingCircle(context);
