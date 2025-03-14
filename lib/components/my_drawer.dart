@@ -60,12 +60,15 @@ class MyDrawer extends StatelessWidget {
                 MyDrawerTile(
                   title: "P R O F I L E",
                   icon: Icons.person,
-                  onTap: (){
-                    Navigator.pop(context);
-                    //go to profile page
-                    Navigator.pop(context, MaterialPageRoute(builder: (context)
-                    => ProfilePage(uid: _auth.getCurrentid())
-                      )
+                  onTap: () {
+                    Navigator.pop(context); // Close drawer
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfilePage(
+                          uid: _auth.getCurrentid(),
+                        ),
+                      ),
                     );
                   },
                 ),

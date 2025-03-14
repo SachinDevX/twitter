@@ -10,6 +10,7 @@ import 'package:twitter/services/auth/auth_gate.dart';
 import 'package:twitter/themes/dark_mode.dart';
 import 'package:twitter/themes/light_mode.dart';
 import 'package:twitter/themes/theme_provider.dart';
+import 'package:twitter/services/database/database_provider.dart';
 
 void main() async {
   //firebase setup
@@ -25,9 +26,7 @@ void main() async {
           //theme provider
           ChangeNotifierProvider(create: (context) => ThemeProvider()),
           //database provider
-          ChangeNotifierProvider(
-            create: (context) => ThemeProvider(),
-          )
+          ChangeNotifierProvider(create: (context) => DataBaseProvider()),
         ],
       child: const MyApp(),
     ),
