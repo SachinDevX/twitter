@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:twitter/models/user.dart';
 import 'package:twitter/services/auth/auth_service.dart';
 
+import '../../models/post.dart';
+
 class DataBaseService{
   //get instance of firestore db & auth
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -34,7 +36,7 @@ Future<void> saveUserInfoFirebase({
   await _db.collection("User").doc(uid).set(userMap);
 }
 //get user info
-Future<UserProfile?> getUserfromFirebase(String uid) async{
+Future<UserProfile?> getUserFromFirebase(String uid) async{
   try{
     //retrieve  user doc from firebase
     DocumentSnapshot userDoc = await _db.collection("User").doc(uid).get();
@@ -63,7 +65,49 @@ Future<void> updateUserBIOFirebase(String bio) async{
     print("Error updating bio: $e");
   }
 }
+
+
+Future<void> postMessageInFirebase(String message) async {
+    try {
+      // Get current uid
+      String uid = _auth.currentUser!.uid;
+
+      // Use this uid to get the user profile
+      UserProfile? user = await getUserFromFirebase(uid);
+
+      /*if (user == null) {
+        print("Error: User not found");
+        return;
+      }*/
+
+      // Create a new post
+      Post newPost = Post(
+        id: '',
+        uid: uid,
+        name: user!.name,
+        username: user.username,
+        message: message,
+        timestamp: Timestamp.now(),
+        likecount: 0,
+        likedBy: [],
+      );
+
+      //convert post object -> map
+      Map<String, dynamic> newPostMap = newPost.toMap();
+
+      //add to firebase
+      await _db.collection("Psots").add(newPostMap);
+
+    }
+
+    catch (e) {
+      print("Error posting message: $e");
+    }
+  }
+
+
 }
+
 
 
 

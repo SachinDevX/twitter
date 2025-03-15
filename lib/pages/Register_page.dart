@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:twitter/components/loading_circle.dart';
 import 'package:twitter/services/auth/auth_service.dart';
-import 'package:twitter/services/database/database.dart';
+import 'package:twitter/services/database/database_services.dart';
 
 import '../components/my_button.dart';
 import '../components/my_text_field.dart';
