@@ -24,15 +24,16 @@ class Post{
 
   //convert a Firestore document to a post object(to use in our app)
   factory Post.fromDocument(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
     return Post(
       id: doc.id,
-      uid: doc['uid'],
-      name: doc['name'],
-      username: doc['username'],
-      message: doc['message'],
-      timestamp: doc['timestamp'],
-      likecount: doc['likes'],
-      likedBy:List<String>.from(doc['likedBY'] ?? []),
+      uid: data['uid'] ?? '',
+      name: data['name'] ?? '',
+      username: data['username'] ?? '',
+      message: data['message'] ?? '',
+      timestamp: data['timestamp'] ?? Timestamp.now(),
+      likecount: data['likecount'] ?? 0,
+      likedBy: List<String>.from(data['likedBy'] ?? []),
     );
   }
   //convert a post object to a map (to store in Firebase)
@@ -43,7 +44,7 @@ Map<String, dynamic> toMap() {
       'username': username,
       'message': message,
       'timestamp': timestamp,
-      'likes': likecount,
+      'likecount': likecount,
       'likedBy': likedBy
     };
 }

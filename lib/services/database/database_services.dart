@@ -68,42 +68,32 @@ Future<void> updateUserBIOFirebase(String bio) async{
 
 
 Future<void> postMessageInFirebase(String message) async {
-    try {
-      // Get current uid
-      String uid = _auth.currentUser!.uid;
+  try {
+    String uid = _auth.currentUser!.uid;
+    UserProfile? user = await getUserFromFirebase(uid);
 
-      // Use this uid to get the user profile
-      UserProfile? user = await getUserFromFirebase(uid);
-
-      /*if (user == null) {
-        print("Error: User not found");
-        return;
-      }*/
-
-      // Create a new post
-      Post newPost = Post(
-        id: '',
-        uid: uid,
-        name: user!.name,
-        username: user.username,
-        message: message,
-        timestamp: Timestamp.now(),
-        likecount: 0,
-        likedBy: [],
-      );
-
-      //convert post object -> map
-      Map<String, dynamic> newPostMap = newPost.toMap();
-
-      //add to firebase
-      await _db.collection("Posts").add(newPostMap);
-
+    if (user == null) {
+      print("Error: User not found");
+      return;
     }
 
-    catch (e) {
-      print("Error posting message: $e");
-    }
+    Post newPost = Post(
+      id: '',
+      uid: uid,
+      name: user.name,
+      username: user.username,
+      message: message,
+      timestamp: Timestamp.now(),
+      likecount: 0,
+      likedBy: [],
+    );
+
+    await _db.collection("Posts").add(newPost.toMap());
+    print("Post added successfully"); // Add this for debugging
+  } catch (e) {
+    print("Error posting message: $e");
   }
+}
 
   Future<List<Post>> getAllPostsFromFirebase() async {
     try {
