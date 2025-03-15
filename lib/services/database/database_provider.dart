@@ -25,6 +25,20 @@ class DataBaseProvider extends ChangeNotifier {
   Future<void> postMessage(String message) async {
     // Post message in firebase
     await _db.postMessageInFirebase(message);
-    notifyListeners(); // Notify listeners when posts change
+
+    //reload data from firebase
+    await loadAllPosts();
+  }
+
+  // Fetch all posts
+  Future<void> loadAllPosts() async {
+    // Get all posts from firebase
+    final posts = await _db.getAllPostsFromFirebase();
+
+    // Update local data
+    _allPost = posts;
+
+    // Update UI
+    notifyListeners();
   }
 }

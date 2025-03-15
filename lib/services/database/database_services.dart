@@ -96,7 +96,7 @@ Future<void> postMessageInFirebase(String message) async {
       Map<String, dynamic> newPostMap = newPost.toMap();
 
       //add to firebase
-      await _db.collection("Psots").add(newPostMap);
+      await _db.collection("Posts").add(newPostMap);
 
     }
 
@@ -105,7 +105,19 @@ Future<void> postMessageInFirebase(String message) async {
     }
   }
 
+  Future<List<Post>> getAllPostsFromFirebase() async {
+    try {
+      QuerySnapshot snapshot = await _db
+          .collection("Posts")
+          .orderBy('timestamp', descending: true)
+          .get();
 
+      return snapshot.docs.map((doc) => Post.fromDocument(doc)).toList();
+    } catch (e) {
+      print("Error getting all posts: $e");
+      return [];
+    }
+  }
 }
 
 
