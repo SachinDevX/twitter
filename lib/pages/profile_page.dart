@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:twitter/components/bio_box.dart';
 import 'package:twitter/components/input_alert_box.dart';
+import 'package:twitter/components/my_post_tile.dart';
+import 'package:twitter/helper/navigate_pages.dart';
 import 'package:twitter/models/user.dart';
 import 'package:twitter/services/auth/auth_service.dart';
 import 'package:twitter/services/database/database_provider.dart';
@@ -20,6 +22,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   //provider
+  late final listeningProvider = Provider.of<DataBaseProvider>(context);
   late final  databaseProvider = Provider.of<DataBaseProvider>(context, listen: false);
 
   //user info
@@ -77,45 +80,51 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
+  @override
   Widget build(BuildContext context) {
+    final allUserPosts = listeningProvider.filterUserPosts(widget.uid);
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text(_isloading ? '': user!.name),
         foregroundColor: Theme.of(context).colorScheme.primary,
-
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        child: ListView(
-          children: [
-            Center(
-              child: Text(_isloading ? '': '@${user!.name}',
+      body: ListView(
+        children: [
+          Center(
+            child: Text(
+              _isloading ? '': '@${user!.name}',
               style: TextStyle(color: Theme.of(context).colorScheme.primary),
-              ),
-
             ),
+          ),
 
-            const SizedBox(height: 25,),
-            Center(
-              child: Container(
-                decoration: BoxDecoration(color: Theme.of(context).colorScheme.secondary,
-                  borderRadius: BorderRadius.circular(25),
+          const SizedBox(height: 25,),
+          
+          // Profile icon
+          Center(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.secondary,
+                borderRadius: BorderRadius.circular(25),
               ),
-                padding: const  EdgeInsets.all(25),
-                child:  Icon(Icons.person,
+              padding: const EdgeInsets.all(25),
+              child: Icon(
+                Icons.person,
                 size: 72,
                 color: Theme.of(context).colorScheme.primary,
-                ),
-              )
-            ),
+              ),
+            )
+          ),
 
-            Row(
+          // Bio section header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25.0),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Bio",
-                style:
-                  TextStyle(color: Theme.of(context).colorScheme.primary),
+                Text(
+                  "Bio",
+                  style: TextStyle(color: Theme.of(context).colorScheme.primary),
                 ),
                 GestureDetector(
                   onTap: _showEditBioBox,
@@ -126,12 +135,34 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ],
             ),
-            const SizedBox(height: 10,),
-          MyBioBox(
-              text: _isloading ? '...' : user!.bio
           ),
-          ]
-        ),
+
+          const SizedBox(height: 10,),
+          
+          // Bio box (removed duplicate)
+          MyBioBox(
+            text: _isloading ? '...' : user!.bio
+          ),
+
+          const SizedBox(height: 10,),
+
+          // Posts section
+          allUserPosts.isEmpty
+              ? const Center(child: Text("No posts yet.."))
+              : ListView.builder(
+                  itemCount: allUserPosts.length,
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                    final post = allUserPosts[index];
+                    return MyPostTile(
+                      post: post,
+                      onUserTap: (){},
+                      onPostTap: () => goPostPage(context, post),
+                    );
+                  }
+                ),
+        ]
       ),
     );
   }

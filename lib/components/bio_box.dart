@@ -9,12 +9,13 @@ class MyBioBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      //padding outside
+      margin: const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.secondary,
         borderRadius: BorderRadius.circular(8),
       ),
 
-      padding: const EdgeInsets.all(25),
 
       child: Text(text.isNotEmpty ? text: "Empty bio..",
       style: TextStyle(color: Theme.of(context).colorScheme.inversePrimary),
