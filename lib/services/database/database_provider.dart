@@ -38,6 +38,9 @@ class DataBaseProvider extends ChangeNotifier {
     // Update local data
     _allPost = posts;
 
+    //initialize local like data
+    initializeLikeMap();
+
     // Update UI
     notifyListeners();
   }
@@ -47,4 +50,65 @@ List<Post> filterUserPosts(String uid) {
     return _allPost.where((post) => post.uid == uid).toList();
 }
 
+//delete post
+Future<void> deletePost(String postId) async {
+    //delete from firebase
+  await _db.deletePostFromFirebase(postId);
+
+  //reload data from firebase
+  await loadAllPosts();
+}
+
+//local map to track like counts for each post
+Map<String, int> _likeCounts = {
+    //for each post id: like count
+};
+
+  //local list to track posts liked by current user
+  List<String> _likedPost = [];
+
+  //does current user like this post ?
+  bool idPostLikedByCurrentUser(String postId) => _likedPost.contains(postId);
+
+  //get like count of a post
+  int getLikeCount(String postId) => _likeCounts[postId]!;
+
+
+  //initialize like map locally
+void initializeLikeMap() {
+  //get current uid
+  final currentUserId = _auth.getCurrentid();
+
+  //for each post get like data
+  for(var post in _allPost) {
+    //update like count map
+    _likeCounts[post.id] == post.likecount;
+
+    //if the current user already likes this post
+    if (post.likedBy.contains(currentUserId)){
+      //add this post id to local list of liked posts
+      _likedPost.add(post.id);
+    }
+  }
+}
+
+Future<void> toggleLike(String postId) async {
+
+  //store original values in case it fails
+  final likedPostOriginal = _likedPost;
+  final likeCountsOriginal = _likeCounts;
+
+  //perform like / unlike
+  if (_likedPost.contains(postId)) {
+    _likedPost.remove(postId);
+    _likeCounts[postId] = (_likeCounts[postId] ?? 0) -1;
+
+  }else {
+    _likedPost.add(postId);
+    _likeCounts[postId] = (_likeCounts[postId] ?? 0) + 1;
+  }
+
+  //update UI locally
+  notifyListeners();
+}
 }

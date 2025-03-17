@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:twitter/services/auth/auth_service.dart';
+import 'package:twitter/services/database/database_provider.dart';
 
 import '../models/post.dart';
 
@@ -19,6 +22,71 @@ class MyPostTile extends StatefulWidget {
 }
 
 class _MyPostTileState extends State<MyPostTile> {
+
+  //provider
+  late final listeningProvider = Provider.of<DataBaseProvider>(context);
+  late final databaseProvider = Provider.of<DataBaseProvider>(context, listen: false);
+
+  void _showOption() {
+    //check if this post is owned by th user or not
+    String currentUid = AuthService().getCurrentid();
+    final bool isOwnPost = widget.post.uid == currentUid;
+
+    showModalBottomSheet(
+        context: context,
+        builder: (context){
+          return SafeArea(
+            child: Wrap(
+              children: [
+                //this post belongs to current user
+                if (isOwnPost)
+                //delete message button
+                ListTile(
+                  leading: const Icon(Icons.delete),
+                  title: const Text("Delete"),
+                  onTap: () async {
+                    //pop option box
+                    Navigator.pop(context);
+
+                    //handle delete action
+                    await databaseProvider.deletePost(widget.post.id);
+                  },
+                )
+                else ...[
+                  //report post button
+                  ListTile(
+                    leading: const Icon(Icons.flag),
+                    title: const Text("Report"),
+                    onTap: () {
+                      //pop option box
+                      Navigator.pop(context);
+                    },
+                  ),
+
+                  ListTile(
+                    leading: const Icon(Icons.block),
+                    title: const Text("Block User"),
+                    onTap: () {
+                      //pop option box
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ],
+                ListTile(
+                  leading: const Icon(Icons.cancel),
+                  title: const Text("Cancel"),
+                  onTap: () {
+                    //pop option box
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+
+        );
+  }
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -68,6 +136,16 @@ class _MyPostTileState extends State<MyPostTile> {
                 Text(
                   '@${widget.post.username}',
                   style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                
+                const Spacer(),
+                
+                //button -> more option: delete
+                GestureDetector(
+                  onTap: () => _showOption,
+                  child:  Icon(Icons.more_horiz,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
