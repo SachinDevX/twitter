@@ -27,11 +27,19 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     // Load posts when page initializes
-    loadAllPosts();
+    loadPosts();
   }
 
-  Future<void> loadAllPosts() async {
+  Future<void> loadPosts() async {
     await databaseProvider.loadAllPosts();
+  }
+
+  Future<void> _handleRefresh() async {
+    try {
+      await loadPosts();
+    } catch (e) {
+      print("Error refreshing: $e");
+    }
   }
 
   void _openPostMessageBoX() {
@@ -73,22 +81,45 @@ class _HomePageState extends State<HomePage> {
         onPressed: _openPostMessageBoX,
         child: const Icon(Icons.add),
       ),
-      body: posts.isEmpty
-          ? const Center(
-              child: Text("Nothing here.."),
-            )
-          : ListView.builder(
-              itemCount: posts.length,
-              itemBuilder: (context, index) {
-                final post = posts[index];
-                return MyPostTile(post: post,
-                onUserTap: () => goUserPage(context, post.uid),
-                  onPostTap: () => goPostPage(context, post),
+      body: RefreshIndicator(
+        onRefresh: _handleRefresh,
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        color: Theme.of(context).colorScheme.primary,
+        child: posts.isEmpty
+            ? ListView(
+                children: [
+                  Container(
+                    height: MediaQuery.of(context).size.height * 0.8,
+                    child: Center(
+                      child: Text(
+                        "Nothing here..",
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : ListView.builder(
+                itemCount: posts.length,
+                itemBuilder: (context, index) {
+                  final post = posts[index];
+                  return MyPostTile(post: post,
+                  onUserTap: () => goUserPage(context, post.uid),
+                    onPostTap: () => goPostPage(context, post),
 
-                );
-              },
-            ),
+                  );
+                },
+              ),
+      ),
     );
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
   }
 }
 

@@ -158,6 +158,8 @@ Future<void> deletePostFromFirebase(String postId) async {
         );
         },
       );
+    }catch (e) {
+      print(e);
     }
   }
 }

@@ -38,17 +38,32 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-
-    //let load user info
-    loadUser();
+    // Load both user info and posts
+    loadInitialData();
   }
-  Future<void> loadUser() async{
-    //get the user profile info
-    user = await databaseProvider.userProfile(widget.uid);
-    //finished loading...
-    setState(() {
-      _isloading = false;
-    });
+
+  Future<void> loadInitialData() async {
+    try {
+      setState(() {
+        _isloading = true;
+      });
+      
+      // Load user profile
+      user = await databaseProvider.userProfile(widget.uid);
+      
+      // Load posts
+      await databaseProvider.loadAllPosts();
+      
+      if (user == null) {
+        print("Could not load user with ID: ${widget.uid}");
+      }
+    } catch (e) {
+      print("Error loading initial data: $e");
+    } finally {
+      setState(() {
+        _isloading = false;
+      });
+    }
   }
 
   //show edit bio box
@@ -72,7 +87,7 @@ class _ProfilePageState extends State<ProfilePage> {
     await databaseProvider.updatebio(bioTextController.text);
 
     //reload user
-    await loadUser();
+    await loadInitialData();
 
     //done loading
     setState(() {
@@ -82,23 +97,54 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Get filtered posts for this user
     final allUserPosts = listeningProvider.filterUserPosts(widget.uid);
+    
+    // Show loading indicator while data is being fetched
+    if (_isloading) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        appBar: AppBar(
+          title: const Text("Loading..."),
+          foregroundColor: Theme.of(context).colorScheme.primary,
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // Show error state if user is null
+    if (user == null) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        appBar: AppBar(
+          title: const Text("Error"),
+          foregroundColor: Theme.of(context).colorScheme.primary,
+        ),
+        body: const Center(
+          child: Text("Could not load user profile"),
+        ),
+      );
+    }
+
+    // Show actual profile when data is loaded
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: Text(_isloading ? '': user!.name),
+        title: Text(user!.name),
         foregroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: ListView(
         children: [
           Center(
             child: Text(
-              _isloading ? '': '@${user!.name}',
+              '@${user!.username}',  // Changed from name to username
               style: TextStyle(color: Theme.of(context).colorScheme.primary),
             ),
           ),
 
-          const SizedBox(height: 25,),
+          const SizedBox(height: 25),
           
           // Profile icon
           Center(
@@ -126,44 +172,61 @@ class _ProfilePageState extends State<ProfilePage> {
                   "Bio",
                   style: TextStyle(color: Theme.of(context).colorScheme.primary),
                 ),
-                GestureDetector(
-                  onTap: _showEditBioBox,
-                  child: Icon(
-                    Icons.settings,
-                    color: Theme.of(context).colorScheme.primary,
+                // Only show edit button if it's the current user's profile
+                if (widget.uid == currentUserId)
+                  GestureDetector(
+                    onTap: _showEditBioBox,
+                    child: Icon(
+                      Icons.settings,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
 
-          const SizedBox(height: 10,),
+          const SizedBox(height: 10),
           
-          // Bio box (removed duplicate)
+          // Bio box
           MyBioBox(
-            text: _isloading ? '...' : user!.bio
+            text: user!.bio
           ),
 
-          const SizedBox(height: 10,),
+          const SizedBox(height: 10),
 
           // Posts section
-          allUserPosts.isEmpty
-              ? const Center(child: Text("No posts yet.."))
-              : ListView.builder(
-                  itemCount: allUserPosts.length,
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) {
-                    final post = allUserPosts[index];
-                    return MyPostTile(
-                      post: post,
-                      onUserTap: (){},
-                      onPostTap: () => goPostPage(context, post),
-                    );
-                  }
+          if (allUserPosts.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(25.0),
+                child: Text(
+                  "No posts yet..",
+                  style: TextStyle(color: Theme.of(context).colorScheme.primary),
                 ),
-        ]
+              ),
+            )
+          else
+            ListView.builder(
+              itemCount: allUserPosts.length,
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemBuilder: (context, index) {
+                final post = allUserPosts[index];
+                return MyPostTile(
+                  post: post,
+                  onUserTap: () {},
+                  onPostTap: () => goPostPage(context, post),
+                );
+              }
+            ),
+        ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    bioTextController.dispose();
+    super.dispose();
   }
 }

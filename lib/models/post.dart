@@ -24,7 +24,7 @@ class Post{
 
   //convert a Firestore document to a post object(to use in our app)
   factory Post.fromDocument(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    final data = doc.data() as Map<String, dynamic>? ?? {};
     return Post(
       id: doc.id,
       uid: data['uid'] ?? '',

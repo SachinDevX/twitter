@@ -27,6 +27,14 @@ class _MyPostTileState extends State<MyPostTile> {
   late final listeningProvider = Provider.of<DataBaseProvider>(context);
   late final databaseProvider = Provider.of<DataBaseProvider>(context, listen: false);
 
+  void _toggleLikePost() async {
+    try{
+      await databaseProvider.toggleLike(widget.post.id);
+    } catch (e) {
+      print(e);
+    }
+  }
+
   void _showOption() {
     //check if this post is owned by th user or not
     String currentUid = AuthService().getCurrentid();
@@ -88,24 +96,24 @@ class _MyPostTileState extends State<MyPostTile> {
         );
   }
   @override
+
+
   Widget build(BuildContext context) {
+    //does the current user like this post?
+    bool likedByCurrentUser = listeningProvider.idPostLikedByCurrentUser(widget.post.id);
+
+
+    //listen to like count
+    int likeCount = listeningProvider.getLikeCount(widget.post.id) ?? widget.post.likecount;
     return GestureDetector(
       onTap: widget.onPostTap,
       child: Container(
-        //padding outside
-        margin: const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
-
-        //padding outside
+        margin: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
         padding: const EdgeInsets.all(20),
-
         decoration: BoxDecoration(
-          //color of post tile
           color: Theme.of(context).colorScheme.secondary,
-
-          //curve corner
-          borderRadius: BorderRadius.circular(8)
+          borderRadius: BorderRadius.circular(8),
         ),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -143,18 +151,12 @@ class _MyPostTileState extends State<MyPostTile> {
                 const Spacer(),
                 
                 //button -> more option: delete
-                GestureDetector(
-                  onTap: () => _showOption,
-                  child:  Icon(Icons.more_horiz,
+                IconButton(
+                  onPressed: _showOption,
+                  icon: Icon(
+                    Icons.more_horiz,
                     color: Theme.of(context).colorScheme.primary,
                   ),
-                ),
-
-                //username handle
-                Text(
-                    widget.post.username,
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.inversePrimary),
                 ),
               ],
             ),
@@ -170,6 +172,35 @@ class _MyPostTileState extends State<MyPostTile> {
               style: TextStyle(
                   color: Theme.of(context).colorScheme.inversePrimary),
             ),
+            
+            const SizedBox(height: 20,),
+            
+            //button -> like + comment
+            Row(
+              children: [
+                //like button
+                GestureDetector(
+                  onTap: _toggleLikePost,
+                    child: likedByCurrentUser
+                        ? const Icon(
+                        Icons.favorite,
+                      color: Colors.red,
+                    )
+                        : Icon(
+                        Icons.favorite_border,
+                        color: Theme.of(context).colorScheme.primary,
+                    ),
+                ),
+
+                const SizedBox(width: 5,),
+                //like count
+                Text(
+                  likeCount != 0 ? likeCount.toString() : '',
+                style:
+                  TextStyle(color: Theme.of(context).colorScheme.primary),
+                ),
+              ],
+            )
           ],
         ),
       ),

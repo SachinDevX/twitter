@@ -4,8 +4,8 @@ import 'package:twitter/themes/dark_mode.dart';
 import 'package:twitter/themes/light_mode.dart';
 
 class ThemeProvider with ChangeNotifier{
-  //initially set it as light mode
-  ThemeData _themeData = lightMode;
+  //initially set it as dark mode
+  ThemeData _themeData = darkMode;
 
   //get the current theme
   ThemeData get themeData => _themeData;
@@ -15,10 +15,10 @@ class ThemeProvider with ChangeNotifier{
 
   // toggle theme method
   void toggleTheme() {
-    if (_themeData == lightMode) {
-      _themeData = darkMode;
-    } else {
+    if (_themeData == darkMode) {
       _themeData = lightMode;
+    } else {
+      _themeData = darkMode;
     }
     notifyListeners();
   }
