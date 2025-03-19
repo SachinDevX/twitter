@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:twitter/models/comments.dart';
 import 'package:twitter/models/post.dart';
 import 'package:twitter/models/user.dart';
 import 'package:twitter/services/auth/auth_service.dart';
@@ -132,4 +133,37 @@ class DataBaseProvider extends ChangeNotifier {
       _likeCounts = likeCountsOriginal;
     }
   }
+  //local list of comment
+final Map<String, List<Comments>> _comments = {};
+
+  //get comment locally
+List<Comments> getComments(String postId) => _comments[postId] ?? [];
+
+//fetch comment from database for a post
+Future<void> loadComments(String postId) async {
+  //get all the comment for this post
+  final allComments = await _db.fetchCommentfromFirebase(postId);
+
+  //update local data
+  _comments[postId] = allComments;
+
+  //update ui
+  notifyListeners();
+}
+//add a comment
+Future<void> addComment(String postId, message) async {
+  //add comment in firebase
+  await _db.AddCommentToFirebase(postId, message);
+
+  //reload comments
+  await loadComments(postId);
+}
+//delete a comment
+Future<void> deleteComment(String commentId, postId) async {
+  //delete comment in fire base
+  await _db.deleteCommentInFirebase(commentId);
+  //reload comment
+  await loadComments(postId);
+
+}
 }

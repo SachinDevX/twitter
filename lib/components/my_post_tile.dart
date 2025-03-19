@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:twitter/components/input_alert_box.dart';
 import 'package:twitter/services/auth/auth_service.dart';
 import 'package:twitter/services/database/database_provider.dart';
 
@@ -33,6 +34,42 @@ class _MyPostTileState extends State<MyPostTile> {
     } catch (e) {
       print(e);
     }
+  }
+ //comment text controller
+  final _commentController = TextEditingController();
+
+//open comment box
+  void _openNewCommentBox() {
+    showDialog(
+        context: context,
+        builder: (context) => MyInputBox(
+            hintText: "Type Comment",
+            onPressed: () async {
+              //add post in db
+              await _addComment();
+            },
+            onPressedText: "Post",
+            textcontroller: _commentController,
+        ),
+    );
+  }
+
+  //user tapped post to add comment
+  Future<void> _addComment() async{
+    //does nothing if there is nothing the text field
+    if(_commentController.text.trim().isEmpty) return;
+
+    //attempt to post comment
+    try{
+      await databaseProvider.addComment(widget.post.id, _commentController.text.trim());
+    }catch (e){
+      print(e);
+    }
+  }
+
+  //load comment
+  Future<void> loadComments() async {
+    await databaseProvider.loadComments(widget.post.id);
   }
 
   void _showOption() {
@@ -105,6 +142,9 @@ class _MyPostTileState extends State<MyPostTile> {
 
     //listen to like count
     int likeCount = listeningProvider.getLikeCount(widget.post.id) ?? widget.post.likecount;
+
+    //listen to comment count
+    int CommentCount = listeningProvider.getComments(widget.post.id).length;
     return GestureDetector(
       onTap: widget.onPostTap,
       child: Container(
@@ -178,18 +218,47 @@ class _MyPostTileState extends State<MyPostTile> {
             //button -> like + comment
             Row(
               children: [
-                //like button
-                GestureDetector(
-                  onTap: _toggleLikePost,
-                    child: likedByCurrentUser
-                        ? const Icon(
-                        Icons.favorite,
-                      color: Colors.red,
-                    )
-                        : Icon(
-                        Icons.favorite_border,
+                SizedBox(
+                  width: 60,
+                  child: Row(
+                    children: [
+                      //like button
+                      GestureDetector(
+                        onTap: _toggleLikePost,
+                        child: likedByCurrentUser
+                            ? const Icon(
+                          Icons.favorite,
+                          color: Colors.red,
+                        )
+                            : Icon(
+                          Icons.favorite_border,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                //COMMENT SECTION
+                Row(
+                  children: [
+                    //comment button
+                    GestureDetector(
+                      onTap: _openNewCommentBox,
+                      child: Icon(Icons.comment,
                         color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
+                    const SizedBox(width: 5,),
+
+                    //comment count
+                    Text(
+                       CommentCount !=0 ? CommentCount.toString(): '',
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(width: 5,),
