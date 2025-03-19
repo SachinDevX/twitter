@@ -46,12 +46,6 @@ Map<String, dynamic> toMap() {
       'timestamp': timestamp,
       'likecount': likecount,
       'likedBy': likedBy
-    };
-}
-
-
-
-
-
-
+      };
+  }
 }

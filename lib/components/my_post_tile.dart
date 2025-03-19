@@ -28,6 +28,13 @@ class _MyPostTileState extends State<MyPostTile> {
   late final listeningProvider = Provider.of<DataBaseProvider>(context);
   late final databaseProvider = Provider.of<DataBaseProvider>(context, listen: false);
 
+  //on start up
+  void initState() {
+    super.initState();
+    //load comments
+    loadComments();
+  }
+
   void _toggleLikePost() async {
     try{
       await databaseProvider.toggleLike(widget.post.id);
