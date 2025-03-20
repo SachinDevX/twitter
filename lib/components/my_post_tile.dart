@@ -112,6 +112,9 @@ class _MyPostTileState extends State<MyPostTile> {
                     onTap: () {
                       //pop option box
                       Navigator.pop(context);
+
+                      //handle report action
+                      _reportPostConfirmationBox();
                     },
                   ),
 
@@ -121,6 +124,9 @@ class _MyPostTileState extends State<MyPostTile> {
                     onTap: () {
                       //pop option box
                       Navigator.pop(context);
+
+                      //handle block action
+                      _blockUserConfirmationBox();
                     },
                   ),
                   ],
@@ -138,6 +144,73 @@ class _MyPostTileState extends State<MyPostTile> {
         },
 
         );
+  }
+  
+  //report post confirmation
+  void _reportPostConfirmationBox() {
+    showDialog(
+        context: context, 
+        builder: (context) => AlertDialog(
+          title: const Text("Report Message"),
+          content: const Text("are you sure you want to report this message?"),
+          actions: [
+            //cancel button
+            TextButton(onPressed: () => Navigator.pop(context), 
+                child: const Text("Cancel "),
+            ),
+            
+            
+            //report button
+            TextButton(
+                onPressed: () async {
+                  //close box
+                  Navigator.pop(context);
+
+                  //report user
+                  await databaseProvider.reportUser(widget.post.id, widget.post.uid);
+                  //let user know it was successfully reported
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Message reported!")));
+                },
+                child: const Text("Report"),
+            )
+          ],
+        )
+    );
+  }
+
+
+//block post confirmation
+  void _blockUserConfirmationBox() {
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Block User"),
+          content: const Text("Are you sure you want to block this user?"),
+          actions: [
+            //cancel button
+            TextButton(onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel "),
+            ),
+
+
+            //block button
+            TextButton(
+              onPressed: () async {
+                //close box
+                Navigator.pop(context);
+
+                //report user
+                await databaseProvider.blockUser( widget.post.uid);
+                //let user know it was successfully block
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("User blocked")));
+              },
+              child: const Text("Block"),
+            )
+          ],
+        )
+    );
   }
   @override
 

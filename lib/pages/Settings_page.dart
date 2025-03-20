@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:twitter/components/settings_tile.dart';
 import 'package:twitter/themes/theme_provider.dart';
 
+import '../helper/navigate_pages.dart';
+
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -24,6 +26,18 @@ class SettingsPage extends StatelessWidget {
                 onChanged: (value) => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
               ),
           ),
+
+          //Block user tile
+          MySettingsTile(
+              title: "Blocked User",
+              action: GestureDetector(
+                onTap: () =>  goToBlockedUsersPage(context),
+                child: Icon(
+                  Icons.arrow_forward,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              )
+          )
         ],
       ),
 
