@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:twitter/pages/profile_page.dart';
 
 import '../models/post.dart';
+import '../pages/account_setting_page.dart';
 import '../pages/blocked_user_page.dart';
 import '../pages/post_page.dart';
 
@@ -25,6 +26,15 @@ void goToBlockedUsersPage(BuildContext context){
     context,
     MaterialPageRoute(
       builder: (context) => BlockedUsersPage(),
+    ),
+  );
+}
+//go to goAccountSettingsPage
+void goAccountSettingsPage(BuildContext context){
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => AccountSettingPage(),
     ),
   );
 }

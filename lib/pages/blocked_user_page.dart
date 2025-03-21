@@ -26,6 +26,38 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
     await databaseProvider.loadBlockedUser();
   }
 
+  //show confirm unblock user
+  void _showUnblockBox(String UserId) {
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Unblock Message"),
+          content: const Text("are you sure you want to unblock this user?"),
+          actions: [
+            //cancel button
+            TextButton(onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel "),
+            ),
+
+
+            //report button
+            TextButton(
+              onPressed: () async {
+                //close box
+                Navigator.pop(context);
+
+                //unblock user
+                await databaseProvider.unblockUser(UserId);
+                //let user know it was successfully reported
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text(" USer Unblocked!")));
+              },
+              child: const Text("Unblocked"),
+            )
+          ],
+        )
+    );
+  }
   @override
   Widget build(BuildContext context) {
     //listen to blocked users
@@ -35,7 +67,7 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
       backgroundColor: Theme.of(context).colorScheme.surface,
 
       appBar: AppBar(
-        title: Text("Blocked User"),
+        title: const Text("Blocked User"),
         foregroundColor: Theme.of(context).colorScheme.primary,
       ),
 
@@ -55,7 +87,7 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
               title: Text(user.name),
               subtitle: Text('@${user.username}'),
               trailing: IconButton(
-                  onPressed: () => _showUnblockBox,
+                  onPressed: () => _showUnblockBox(user.uid),
                   icon: const Icon(Icons.block)
               ),
             );

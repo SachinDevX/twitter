@@ -67,6 +67,42 @@ Future<void> updateUserBIOFirebase(String bio) async{
   }
 }
 
+//delete user info
+  Future<void> deleteUserInfoFromFirebase(String uid) async{
+  WriteBatch batch = _db.batch();
+
+  //delete user doc
+    DocumentReference userDoc = _db.collection("User").doc(uid);
+    batch.delete(userDoc);
+
+    //delete user posts
+    QuerySnapshot userPosts =
+        await _db.collection("Posts").where('uid', isEqualTo: uid).get();
+
+    for (var post in userPosts.docs) {
+      batch.delete(post.reference);
+    }
+
+    //delete liked don by this user
+  QuerySnapshot allPosts = await _db.collection("Posts").get();
+    for (QueryDocumentSnapshot post in allPosts.docs) {
+      Map<String, dynamic> postData = post.data() as Map<String, dynamic>;
+      var likedBy = postData['likedBy '] as List<dynamic>? ?? [];
+
+      if(likedBy.contains(uid)) {
+        batch.update(post.reference, {
+          'likedBy ': FieldValue.arrayRemove([uid]),
+          'likes' : FieldValue.increment(-1),
+        });
+      }
+    }
+  QuerySnapshot userComments =
+  await _db.collection("Comments").where('uid', isEqualTo: uid).get();
+
+  for (var comment in userComments.docs) {
+    batch.delete(comment.reference);
+  }
+  }
 
 Future<void> postMessageInFirebase(String message) async {
   try {
