@@ -77,9 +77,43 @@ class _HomePageState extends State<HomePage> {
         title: const Text("H O M E"),
         foregroundColor: Theme.of(context).colorScheme.primary,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openPostMessageBoX,
-        child: const Icon(Icons.add),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+              spreadRadius: 2,
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: _openPostMessageBoX,
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          elevation: 4,
+          highlightElevation: 8,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                Icons.edit,
+                size: 28,
+                color: Theme.of(context).colorScheme.surface,
+              ),
+              Positioned(
+                bottom: 8,
+                right: 8,
+                child: Icon(
+                  Icons.add,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.surface,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: _handleRefresh,
