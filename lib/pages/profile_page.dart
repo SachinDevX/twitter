@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:twitter/components/bio_box.dart';
 import 'package:twitter/components/input_alert_box.dart';
+import 'package:twitter/components/my_follow_button.dart';
 import 'package:twitter/components/my_post_tile.dart';
+import 'package:twitter/components/my_profile_state.dart';
 import 'package:twitter/helper/navigate_pages.dart';
 import 'package:twitter/models/user.dart';
+import 'package:twitter/pages/follow_list_page.dart';
 import 'package:twitter/services/auth/auth_service.dart';
 import 'package:twitter/services/database/database_provider.dart';
 
@@ -35,6 +38,9 @@ class _ProfilePageState extends State<ProfilePage> {
   //loading...
    bool _isloading = true;
 
+   //isFollowing State
+  bool _isFollowing = false;
+
   @override
   void initState() {
     super.initState();
@@ -50,6 +56,15 @@ class _ProfilePageState extends State<ProfilePage> {
       
       // Load user profile
       user = await databaseProvider.userProfile(widget.uid);
+
+      // Load follower and following for this user
+      await databaseProvider.loadUserFollowers(widget.uid);
+      await databaseProvider.loadUserFollowing(widget.uid);
+
+      // Update following state
+      setState(() {
+        _isFollowing = databaseProvider.isFollowing(widget.uid);
+      });
       
       // Load posts
       await databaseProvider.loadAllPosts();
@@ -76,6 +91,47 @@ class _ProfilePageState extends State<ProfilePage> {
             textcontroller: bioTextController,
         ));
   }
+
+  //toggle follow / unfollow
+Future<void> toggleFollow() async {
+    //unfollow
+  if(_isFollowing) {
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Unfollow"),
+          content: const Text("Are you sure you want to unfollow"),
+          actions: [
+            //cancel
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel"),
+            ),
+            //
+            TextButton(
+                onPressed: () async{
+                  Navigator.pop(context);
+                  //perform unfollow
+                  await databaseProvider.unblockUser(widget.uid);
+                },
+                child: const Text("Yes"),
+            )
+          ],
+        )
+    );
+  }
+  //follow
+  else{
+    await databaseProvider.followUser(widget.uid);
+  }
+  //update isfollowing state
+  setState(() {
+    _isFollowing = !_isFollowing;
+  });
+
+
+}
+
 //save updated bio
   Future<void> saveBio() async {
     //start loading
@@ -99,7 +155,14 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     // Get filtered posts for this user
     final allUserPosts = listeningProvider.filterUserPosts(widget.uid);
-    
+
+    //listen to followers and following count
+    final followerCount = listeningProvider.getFollowerCount(widget.uid);
+    final followingCount = listeningProvider.getFollowingCount(widget.uid);
+
+
+    //listen to is following
+    _isFollowing = listeningProvider.isFollowing(widget.uid);
     // Show loading indicator while data is being fetched
     if (_isloading) {
       return Scaffold(
@@ -161,6 +224,32 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             )
           ),
+
+          const SizedBox(height: 25,),
+
+          //profile stats -> number of posts / follower / following
+          MyProfileState(
+            postCount: allUserPosts.length ,
+            followingCount: followerCount,
+            follwerCount: followingCount,
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => FollowListPage(),
+                ),
+            ),
+          ),
+
+          const SizedBox(height: 25,),
+
+          //follow/ unfollow button
+          //only show id the user is viewing someone else profile
+          if(user != null && user!.uid != currentUserId)
+            MyFollowButton(
+                onPressed: toggleFollow,
+                isFollowing: _isFollowing),
+
+
 
           // Bio section header
           Padding(

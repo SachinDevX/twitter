@@ -268,46 +268,134 @@ Future<void> reportUserInFirebase(String postId, userId) async {
   await _db.collection("Reports").add(report);
 }
 //block user
-Future<void> blockUserInFirebase(String useeId ) async{
-  //get current user id
-  final currentUSerId = _auth.currentUser!.uid;
-
-  //add this user to blocked list
-  await _db
-  .collection("user")
-  .doc(currentUSerId)
-  .collection("BLockedUser")
-  .doc(useeId)
-  .set({});
-}
-//unblock user
-Future<void> unblockUserInFirebase(String blockUserId) async{
-  //get current user id
+Future<void> blockUserInFirebase(String userId) async {
+  // get current user id
   final currentUserId = _auth.currentUser!.uid;
 
-  //unblock in firebase
+  // add this user to blocked list
   await _db
-  .collection("User")
-  .doc(currentUserId)
-  .collection("blocked User")
-  .doc(blockUserId)
-  .delete();
+    .collection("User")  // Fixed collection name
+    .doc(currentUserId)
+    .collection("BlockedUsers")  // Fixed collection name
+    .doc(userId)
+    .set({
+      'timestamp': FieldValue.serverTimestamp(),
+      'blockedUserId': userId,
+    });
+}
+//unblock user
+Future<void> unblockUserInFirebase(String blockUserId) async {
+  // get current user id
+  final currentUserId = _auth.currentUser!.uid;
+
+  // unblock in firebase
+  await _db
+    .collection("User")  // Fixed collection name
+    .doc(currentUserId)
+    .collection("BlockedUsers")  // Fixed collection name
+    .doc(blockUserId)
+    .delete();
 }
 //Get list of blocked user ids
 Future<List<String>> getBlockedUidsFromFirebase() async {
-  //get current user id
+  // get current user id
   final currentUserId = _auth.currentUser!.uid;
   
-  //get data of blocked user
+  // get data of blocked users
   final snapshot = await _db
-      .collection("User")
-      .doc(currentUserId)
-      .collection("blocked User")
-      .get();
+    .collection("User")  // Fixed collection name
+    .doc(currentUserId)
+    .collection("BlockedUsers")  // Fixed collection name
+    .get();
   
-  //return as a list of uids
+  // return as a list of uids
   return snapshot.docs.map((doc) => doc.id).toList();
 }
+
+// Add new method to get blocked users' profiles
+Future<List<UserProfile>> getBlockedUsersFromFirebase() async {
+  try {
+    // Get list of blocked UIDs
+    final blockedUids = await getBlockedUidsFromFirebase();
+    
+    // Get user profiles for each blocked UID
+    List<UserProfile> blockedUsers = [];
+    
+    for (String uid in blockedUids) {
+      UserProfile? user = await getUserFromFirebase(uid);
+      if (user != null) {
+        blockedUsers.add(user);
+      }
+    }
+    
+    return blockedUsers;
+  } catch (e) {
+    print("Error getting blocked users: $e");
+    return [];
+  }
+}
+
+//follow user
+Future<void> followUserInFirebase(String uid) async {
+  //get current logged in user
+  final currentUserId = _auth.currentUser!.uid;
+
+  //add target user to the current user following
+  await _db
+  .collection("Users")
+  .doc(currentUserId)
+  .collection("Following")
+  .doc(uid)
+  .set({});
+
+  //add current user to the target user followers
+  await _db
+  .collection("User")
+  .doc(uid)
+  .collection("Followers")
+  .doc(currentUserId)
+  .set({});
+}
+
+//unfollow user
+Future<void> unFollowUserInFirebase(String uid) async {
+  //get current logged in user
+  final currentUserId = _auth.currentUser!.uid;
+
+  //remove target user from current user following
+  await _db
+  .collection("User")
+  .doc(currentUserId)
+  .collection("Following")
+  .doc(uid)
+  .delete();
+
+  //remove current user from target user follower
+  await _db
+      .collection("User")
+      .doc(currentUserId)
+      .collection("Following")
+      .doc(uid)
+      .delete();
+}
+
+//get a user follower: list of uid
+Future<List<String>> getFollowerUidsFormFirebase(String uid) async {
+  //get the follower from firebase
+  final snapshot =
+      await _db.collection("User").doc(uid).collection("follower").get();
+
+  //return as a nice simple list of uids
+  return snapshot.docs.map((doc) => doc.id).toList();
+}
+  Future<List<String>> getFollowingUidsFormFirebase(String uid) async {
+    //get the follower from firebase
+    final snapshot =
+    await _db.collection("User").doc(uid).collection("Following").get();
+
+    //return as a nice simple list of uids
+    return snapshot.docs.map((doc) => doc.id).toList();
+  }
 }
 
 

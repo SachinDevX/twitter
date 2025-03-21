@@ -19,40 +19,42 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
   @override
   void initState() {
     super.initState();
-    //load blocked user
+    //load blocked users
     loadBlockedUsers();
   }
   Future<void> loadBlockedUsers() async {
-    await databaseProvider.loadBlockedUser();
+    await databaseProvider.loadBlockedUsers();
   }
 
   //show confirm unblock user
-  void _showUnblockBox(String UserId) {
+  void _showUnblockBox(String userId) {
     showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text("Unblock Message"),
-          content: const Text("are you sure you want to unblock this user?"),
+          title: const Text("Unblock User"),
+          content: const Text("Are you sure you want to unblock this user?"),
           actions: [
             //cancel button
-            TextButton(onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel "),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
             ),
 
-
-            //report button
+            //unblock button
             TextButton(
               onPressed: () async {
                 //close box
                 Navigator.pop(context);
 
                 //unblock user
-                await databaseProvider.unblockUser(UserId);
+                await databaseProvider.unblockUser(userId);
                 //let user know it was successfully reported
-                ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text(" USer Unblocked!")));
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("User Unblocked!")));
+                }
               },
-              child: const Text("Unblocked"),
+              child: const Text("Unblock"),
             )
           ],
         )
@@ -61,20 +63,20 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
   @override
   Widget build(BuildContext context) {
     //listen to blocked users
-    final blockedUsers = listeningProvider.blockedUser;
+    final blockedUsers = listeningProvider.blockedUsers;
     //SCAFFOLD
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
 
       appBar: AppBar(
-        title: const Text("Blocked User"),
+        title: const Text("Blocked Users"),
         foregroundColor: Theme.of(context).colorScheme.primary,
       ),
 
       //Body
       body: blockedUsers.isEmpty
       ? Center(
-        child: Text("No blocked user.."),
+        child: Text("No blocked users..", style: TextStyle(color: Theme.of(context).colorScheme.primary)),
       )
       : ListView.builder(
           itemCount: blockedUsers.length,
