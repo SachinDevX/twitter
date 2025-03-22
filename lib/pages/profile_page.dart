@@ -7,7 +7,7 @@ import 'package:twitter/components/my_post_tile.dart';
 import 'package:twitter/components/my_profile_state.dart';
 import 'package:twitter/helper/navigate_pages.dart';
 import 'package:twitter/models/user.dart';
-import 'package:twitter/pages/follow_list_page.dart';
+//import 'package:twitter/pages/follow_list_page.dart';
 import 'package:twitter/services/auth/auth_service.dart';
 import 'package:twitter/services/database/database_provider.dart';
 
@@ -94,42 +94,66 @@ class _ProfilePageState extends State<ProfilePage> {
 
   //toggle follow / unfollow
 Future<void> toggleFollow() async {
-    //unfollow
-  if(_isFollowing) {
-    showDialog(
+  if (_isloading) return; // Prevent multiple calls while loading
+
+  try {
+    setState(() => _isloading = true);
+
+    if (_isFollowing) {
+      showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text("Unfollow"),
-          content: const Text("Are you sure you want to unfollow"),
+          content: const Text("Are you sure you want to unfollow?"),
           actions: [
-            //cancel
             TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel"),
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
             ),
-            //
             TextButton(
-                onPressed: () async{
-                  Navigator.pop(context);
-                  //perform unfollow
-                  await databaseProvider.unblockUser(widget.uid);
-                },
-                child: const Text("Yes"),
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  await databaseProvider.unfollowUser(widget.uid);
+                  if (mounted) {
+                    setState(() {
+                      _isFollowing = false;
+                    });
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Failed to unfollow user"))
+                    );
+                  }
+                }
+              },
+              child: const Text("Yes"),
             )
           ],
         )
-    );
+      );
+    } else {
+      try {
+        await databaseProvider.followUser(widget.uid);
+        if (mounted) {
+          setState(() {
+            _isFollowing = true;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Failed to follow user"))
+          );
+        }
+      }
+    }
+  } finally {
+    if (mounted) {
+      setState(() => _isloading = false);
+    }
   }
-  //follow
-  else{
-    await databaseProvider.followUser(widget.uid);
-  }
-  //update isfollowing state
-  setState(() {
-    _isFollowing = !_isFollowing;
-  });
-
-
 }
 
 //save updated bio
@@ -229,15 +253,10 @@ Future<void> toggleFollow() async {
 
           //profile stats -> number of posts / follower / following
           MyProfileState(
-            postCount: allUserPosts.length ,
-            followingCount: followerCount,
-            follwerCount: followingCount,
-            onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => FollowListPage(),
-                ),
-            ),
+            postCount: allUserPosts.length,
+            followingCount: followingCount,
+            followerCount: followerCount,
+            onTap: () {}
           ),
 
           const SizedBox(height: 25,),

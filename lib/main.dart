@@ -5,6 +5,7 @@ import 'package:twitter/firebase_options.dart';
 import 'package:twitter/pages/Register_page.dart';
 import 'package:twitter/pages/home_page.dart';
 import 'package:twitter/pages/login_page.dart';
+import 'package:twitter/pages/welcome_page.dart';
 import 'package:twitter/services/auth/Login_Or_Register.dart';
 import 'package:twitter/services/auth/auth_gate.dart';
 import 'package:twitter/themes/dark_mode.dart';
@@ -18,16 +19,16 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
+
   //run app
   runApp(
     MultiProvider(
-        providers: [
-          //theme provider
-          ChangeNotifierProvider(create: (context) => ThemeProvider()),
-          //database provider
-          ChangeNotifierProvider(create: (context) => DataBaseProvider()),
-        ],
+      providers: [
+        //theme provider
+        ChangeNotifierProvider(create: (context) => ThemeProvider()),
+        //database provider
+        ChangeNotifierProvider(create: (context) => DataBaseProvider()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -40,8 +41,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
-      routes: {'/' : (context) => const AuthGate()},
+      home: WelcomePage(),
+      routes: {
+        '/auth': (context) => const AuthGate(),
+      },
       theme: Provider.of<ThemeProvider>(context).themeData,
     );
   }

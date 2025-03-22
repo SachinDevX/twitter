@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:twitter/models/comments.dart';
@@ -236,118 +237,79 @@ class DataBaseProvider extends ChangeNotifier {
   }
 
   Future<void> loadUserFollowing(String uid) async {
-    //get the list of follower uid from firebase
+    // get the list of following uids from firebase
     final listOfFollowingUids = await _db.getFollowingUidsFormFirebase(uid);
 
-    //update local data
-    _followers[uid] = listOfFollowingUids;
-    _followersCount[uid] = listOfFollowingUids.length;
+    // update local data - Fix: Changed from _followers to _following
+    _following[uid] = listOfFollowingUids;
+    // Fix: Changed from _followersCount to _followingCount
+    _followingCount[uid] = listOfFollowingUids.length;
 
-    //update ui
+    // update ui
     notifyListeners();
   }
 
   Future<void> followUser(String targetUserId) async {
-    //get current uid
     final currentUserId = _auth.getCurrentid();
 
-    //initialize with empty list if null
-    _following.putIfAbsent(currentUserId, () => []);
-    _followers.putIfAbsent(currentUserId, () => []);
-
-    //follow if current user is not one of the target user follower
-    if (!_followers[targetUserId]!.contains(currentUserId)) {
-      //add current user to target user follower list
-      _followers[targetUserId]?.add(currentUserId);
-
-      //update follower count
-      _followersCount[targetUserId] = (_followersCount[targetUserId] ?? 0) + 1;
-
-      //then add target user to current user following
-      _following[currentUserId]?.add(targetUserId);
-
-      //update following count
-      _followingCount[currentUserId] =
-          (_followingCount[currentUserId] ?? 0) + 1;
-    }
-    //update ui
-    notifyListeners();
-
     try {
-      //follow user in firebase
+      // First update Firebase
       await _db.followUserInFirebase(targetUserId);
 
-      //reload current users following
+      // Initialize maps if they don't exist
+      _following.putIfAbsent(currentUserId, () => []);
+      _followers.putIfAbsent(targetUserId, () => []);
+
+      // Update local state
+      _followers[targetUserId]?.add(currentUserId);
+      _followersCount[targetUserId] = (_followersCount[targetUserId] ?? 0) + 1;
+
+      _following[currentUserId]?.add(targetUserId);
+      _followingCount[currentUserId] = (_followingCount[currentUserId] ?? 0) + 1;
+
+      // Reload data to ensure consistency
+      await loadUserFollowers(targetUserId);
       await loadUserFollowing(currentUserId);
-    }
 
-    //if there is an error.. revert back to original
-    catch (e) {
-      //remove current user from target user follower
-      _followers[targetUserId]?.remove(currentUserId);
-
-      //update follower count
-      _followingCount[targetUserId] = (_followersCount[targetUserId] ?? 0) - 1;
-
-      //remove from current user following
-      _following[currentUserId]?.remove(targetUserId);
-
-      //update following count
-      _followersCount[currentUserId] =
-          (_followingCount[currentUserId] ?? 0) - 1;
-
-      //update ui
       notifyListeners();
+    } catch (e) {
+      print("Error following user: $e");
+      // If there's an error, reload data to ensure correct state
+      await loadUserFollowers(targetUserId);
+      await loadUserFollowing(currentUserId);
+      rethrow; // Rethrow to handle in UI
     }
   }
 
   Future<void> unfollowUser(String targetUserId) async {
     final currentUserId = _auth.getCurrentid();
 
-    // initialize list if they don't exist
-    _following.putIfAbsent(currentUserId, () => []);
-    _followers.putIfAbsent(currentUserId, () => []);
-
-    // unfollow if current user is one of the target user's followers
-    if (_followers[targetUserId]!.contains(currentUserId)) {
-      // remove current user from target user following
-      _followers[targetUserId]?.remove(currentUserId);
-
-      // update follower count
-      _followersCount[targetUserId] = (_followersCount[targetUserId] ?? 1) - 1;
-
-      // remove target user from current user following list
-      _followingCount[currentUserId] = (_followingCount[currentUserId] ?? 1) - 1;
-    }
-
-    // update ui
-    notifyListeners();
-    
     try {
-      // unfollow target user in firebase
+      // First update Firebase
       await _db.unFollowUserInFirebase(targetUserId);
 
-      // reload user followers
-      await loadUserFollowers(currentUserId);
+      // Initialize maps if they don't exist
+      _following.putIfAbsent(currentUserId, () => []);
+      _followers.putIfAbsent(targetUserId, () => []);
 
-      // reload user following
+      // Update local state
+      _followers[targetUserId]?.remove(currentUserId);
+      _followersCount[targetUserId] = (_followersCount[targetUserId] ?? 1) - 1;
+
+      _following[currentUserId]?.remove(targetUserId);
+      _followingCount[currentUserId] = (_followingCount[currentUserId] ?? 1) - 1;
+
+      // Reload data to ensure consistency
+      await loadUserFollowers(targetUserId);
       await loadUserFollowing(currentUserId);
-    } catch (e) {
-      // if there is an error.. revert back to original
-      // add current user back into target user follower
-      _followers[targetUserId]?.add(currentUserId);
 
-      // update follower count
-      _followersCount[targetUserId] = (_followersCount[targetUserId] ?? 0) + 1;
-
-      // add target user back into current user following list
-      _following[currentUserId]?.add(targetUserId);
-
-      // update following count
-      _followingCount[currentUserId] = (_followingCount[targetUserId] ?? 0) + 1;
-
-      // update ui
       notifyListeners();
+    } catch (e) {
+      print("Error unfollowing user: $e");
+      // If there's an error, reload data to ensure correct state
+      await loadUserFollowers(targetUserId);
+      await loadUserFollowing(currentUserId);
+      rethrow; // Rethrow to handle in UI
     }
   }
 

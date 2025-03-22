@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 
 class MyProfileState extends StatelessWidget {
   final int postCount;
-  final int follwerCount;
   final int followingCount;
+  final int followerCount;
   final void Function()? onTap;
   const MyProfileState({
     super.key,
     required this.postCount,
     required this.followingCount,
-    required this.follwerCount,
-    required this.onTap,
+    required this.followerCount,
+    this.onTap,
   });
 
   @override
@@ -47,7 +47,16 @@ class MyProfileState extends StatelessWidget {
           SizedBox(
             width: 100,
             child: Column(
-              children: [Text(follwerCount.toString()), Text("Posts")],
+              children: [
+                Text(
+                  followerCount.toString(),
+                  style: textStyleForCount,
+                ), 
+                Text(
+                  "Followers",
+                  style: textStyleForText,
+                )
+              ],
             ),
           ),
           SizedBox(
